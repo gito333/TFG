@@ -33,7 +33,7 @@ def restartdb():
         month = int(input())
     with open("config.json", "r+") as json_file:
         data = json.load(json_file)
-        data['last_date_updated'] = f"{year}-{month}-01T00:00:00.000000+0100"
+        data['last_date_updated'] = f"{year}-{month}-01"
         json_file.seek(0)
         json.dump(data, json_file)
         json_file.truncate()
@@ -42,7 +42,7 @@ def restartdb():
 
 def create_config_file():
     data = {
-        "last_date_updated": "2022-01-01T00:00:00.000000+0100",
+        "last_date_updated": "2022-01-01",
         "CPV": ["48", "30", "72", "50", "51", "64"],
         "emails": "",
         "threads": 10
@@ -114,12 +114,12 @@ def main():
                 user_input = input()
                 embeddings = connectionSQL.get_embeddings(user_input)
                 tlb =  connectionSQL.connect_vector_db()
-                res = tlb.search(embeddings).limit(100).select(["Identificador", "Id_de_lote"]).to_list()
+                res = tlb.search(embeddings).limit(4).select(["Identificador", "Id_de_lote"]).to_list()
                 for i in res:
                     print(f"identificador {i['Identificador']} id de lote {i['Id_de_lote']}")
                     x = connectionSQL.get_from_db(i["Identificador"], i["Id_de_lote"])
-                    for key, value in x:
-                        print(f"{key}: {value}")
+                    for n,key in enumerate(licitacion.__dict__.keys()):
+                        print(f"{key}: {x[n]}")
             except Exception as e:
                 print(f"no existe la base de datos {e}")
         elif user_input == "removedb":
