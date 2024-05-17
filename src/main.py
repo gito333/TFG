@@ -43,7 +43,9 @@ def restartdb():
 def create_config_file():
     data = {
         "last_date_updated": "2022-01-01T00:00:00.000000+0100",
-        "CPV": ["48", "30", "72", "50", "51", "64"]
+        "CPV": ["48", "30", "72", "50", "51", "64"],
+        "emails": "",
+        "threads": 10
     }
     with open('config.json', 'w') as f:
         json.dump(data, f)
@@ -116,9 +118,8 @@ def main():
                 for i in res:
                     print(f"identificador {i['Identificador']} id de lote {i['Id_de_lote']}")
                     x = connectionSQL.get_from_db(i["Identificador"], i["Id_de_lote"])
-                    # licitacion = Licitacion(x[i] for i in range(0:24))
-                    licitacion = Licitacion(x[0],x[1],x[2],x[3],x[4],x[5],x[6],x[7],x[8],x[9],x[10],x[11],x[12],x[13],x[14],x[15],x[16],x[17],x[18],x[19],x[20],x[21],x[22])
-                    print(licitacion)
+                    for key, value in x:
+                        print(f"{key}: {value}")
             except Exception as e:
                 print(f"no existe la base de datos {e}")
         elif user_input == "removedb":

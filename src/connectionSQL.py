@@ -1,6 +1,5 @@
 import sqlite3, lancedb, pyarrow as pa
 import licitacion
-from datetime import datetime
 from variables import CPV_LIST,DB_LOCATION
 from sentence_transformers import SentenceTransformer
 
