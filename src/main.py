@@ -33,7 +33,7 @@ def restartdb():
         month = int(input())
     with open("config.json", "r+") as json_file:
         data = json.load(json_file)
-        data['last_date_updated'] = f"{year}-{month}-01"
+        data['last_date_updated'] = f"{year}-{month}-01T00:00:00.000000+0100"
         json_file.seek(0)
         json.dump(data, json_file)
         json_file.truncate()
@@ -42,7 +42,7 @@ def restartdb():
 
 def create_config_file():
     data = {
-        "last_date_updated": "2022-01-01",
+        "last_date_updated": "2022-01-01T00:00:00.000000+0100",
         "CPV": ["48", "30", "72", "50", "51", "64"],
         "emails": "",
         "threads": 10
@@ -120,6 +120,7 @@ def main():
                     x = connectionSQL.get_from_db(i["Identificador"], i["Id_de_lote"])
                     for n,key in enumerate(licitacion.__dict__.keys()):
                         print(f"{key}: {x[n]}")
+
             except Exception as e:
                 print(f"no existe la base de datos {e}")
         elif user_input == "removedb":
