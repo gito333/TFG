@@ -107,7 +107,8 @@ def main():
                 data = json.load(json_file)
                 if data['last_date_updated'] == "":
                     restartdb()
-            parsing.update()
+            mailing = parsing.update()
+            del(mailing)
         elif user_input == "search":
             try:
                 print("Haz una busqueda semantica sobre lo que quieres buscar")

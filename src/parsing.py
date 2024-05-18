@@ -43,7 +43,7 @@ def update():
         while(updated_month < 13):
             download_data(DATA_FOLDER,updated_year, convert_month(updated_month))
             stack = create_file_stack(DATA_FOLDER, last_update)
-            mailing_list.append(parse_stack(stack,DATA_FOLDER))
+            mailing_list = parse_stack(stack,DATA_FOLDER)
             remove_files(DATA_FOLDER)
             updated_month+=1
         updated_month = 1
@@ -51,9 +51,10 @@ def update():
     while(current_month >= updated_month):
         download_data(DATA_FOLDER,updated_year, convert_month(updated_month))
         stack = create_file_stack(DATA_FOLDER, last_update)
-        mailing_list.append(parse_stack(stack,DATA_FOLDER))
+        mailing_list = parse_stack(stack,DATA_FOLDER)
         remove_files(DATA_FOLDER)
         updated_month+=1
+    (print(str(x) for x in mailing_list))
     return mailing_list
 
 def extract_update_date(path: str):
@@ -95,16 +96,16 @@ def parse_stack(stack: list[tuple[str, datetime]], path):
     update_list = []
     while(stack):
         actual_file, file_update = stack.pop()
-        times = []
+        # times = []
         tree = ET.parse(path + actual_file)
         root = tree.getroot()
         print(f"el fichero es {actual_file} y la fecha de actualizacion es {file_update}")
-        start = time.time()
-        update_list.append(parse(root))
-        end = time.time()
-        print(end - start)
-        time.sleep(10)
-        times.append(end-start)
+        # start = time.time()
+        update_list = (parse(root))
+        # end = time.time()
+        # print(end - start)
+        # time.sleep(10)
+        # times.append(end-start)
         with open("config.json", "r+") as json_file:
             data = json.load(json_file)
             data['last_date_updated'] = file_update.strftime(DATE_FORMAT)
@@ -124,64 +125,17 @@ def check_element(query: str, root: ET.Element):
 def parse(root: ET.Element):
     update_list = []
     for entry in root.iter('{http://www.w3.org/2005/Atom}entry'):
+        # start = time.time()
         array = parse_entry(entry)
         if array is not None:
-            for element in (array):
+            for element in array:
                 if element is not None:
                     modified = connectionSQL.insert_licitacion(element)
                     if modified:
                         update_list.append(element)
+        # end = time.time()
+        # print(end-start)
     return update_list
-
-def parse_lotes_en_plazo(procurementProject: ET.Element, numero_de_lote: int, licitacion: Licitacion):
-    lote = copy.deepcopy(licitacion)
-    objeto_de_lote = procurementProject.find('cbc:Name',NAMESPACES)
-    if objeto_de_lote is not None:
-        lote.Objeto_licitacion_lote = objeto_de_lote.text.__str__()
-    budget_section = procurementProject.find('cac:BudgetAmount',NAMESPACES)
-    if budget_section is not None:
-        presupuesto_base = budget_section.find('cbc:TaxExclusiveAmount',NAMESPACES)
-        if presupuesto_base is not None:
-            lote.Presupuesto_base_sin_impuestos_licitacion_lote = presupuesto_base.text.__str__()
-    lote.Id_de_lote = str(numero_de_lote+1)
-    return lote
-
-
-def parse_lotes_terminados(tenderResult: ET.Element, procurementProject: ET.Element, licitacion: Licitacion):
-    lote = copy.deepcopy(licitacion)
-    objeto_de_lote = procurementProject.find('cbc:Name',NAMESPACES)
-    if objeto_de_lote is not None:
-        lote.Objeto_licitacion_lote = objeto_de_lote.text.__str__()
-    budget_section = procurementProject.find('cac:BudgetAmount',NAMESPACES)
-    if budget_section is not None:
-        presupuesto_base = budget_section.find('cbc:TaxExclusiveAmount',NAMESPACES)
-        if presupuesto_base is not None:
-            lote.Presupuesto_base_sin_impuestos_licitacion_lote = presupuesto_base.text.__str__()
-    resultCode = tenderResult.find('cbc:ResultCode',NAMESPACES)
-    if resultCode is not None:
-        lote.Resultado_licitacion_lote = resultados_de_procedimiento.get(resultCode.text.__str__(),"null")
-    tender_quantity = tenderResult.find('cbc:ReceivedTenderQuantity')
-    if tender_quantity is not None and tender_quantity.text is not None:
-        lote.Numero_de_ofertas_recibidas_por_licitacion_lote = tender_quantity.text
-    if lote.Resultado_licitacion_lote == "Formalizado" or lote.Resultado_licitacion_lote == "Resuelta":
-        contract_section = tenderResult.find('cac:WinningParty',NAMESPACES)
-        if contract_section is not None:
-            contract_section = contract_section.find('cac:PartyName',NAMESPACES)
-            if contract_section is not None:
-                contracter = contract_section.find('cbc:Name',NAMESPACES)
-                if contracter is not None:
-                    lote.Adjudicatario_licitacion_lote = contracter.text.__str__()
-    awarded_tender = tenderResult.find('cac:AwardedTenderedProject',NAMESPACES)
-    if awarded_tender is not None:
-        id = awarded_tender.find('cbc:ProcurementProjectLotID')
-        lote.Id_de_lote = id.text.__str__() if id is not None else "error con el id"
-        awarded_tender = awarded_tender.find('cac:LegalMonetaryTotal',NAMESPACES)
-        if awarded_tender is not None:
-            payable_amount = awarded_tender.find('cbc:PayableAmount',NAMESPACES)
-            lote.Importe_adjudicacion_sin_impuestos_licitacion_lote = payable_amount.text.__str__() if payable_amount is not None else "error en la facturación"
-    return lote
-
-
 
 def parse_entry(root: ET.Element):
     licitacion = Licitacion()
@@ -196,9 +150,17 @@ def parse_entry(root: ET.Element):
         return
     licitacion.Numero_expediente = check_element('cbc:ContractFolderID', entry).text.__str__()
     licitacion.Estado = codigos_de_estado.get(check_element('cbc-place-ext:ContractFolderStatusCode', entry).text.__str__(),"null")
+    contratador_section = entry.find('cac-place-ext:LocatedContractingParty',NAMESPACES)
+    if contratador_section is not None:
+        contratador_section = contratador_section.find('cac:Party',NAMESPACES)
+        if contratador_section is not None:
+            contratador_section = contratador_section.find('cac:PartyName',NAMESPACES)
+            if contratador_section is not None:
+                licitacion.Organo_de_Contratacion = check_element('cbc:Name', contratador_section).text.__str__()
     procurementProject = entry.find('cac:ProcurementProject', NAMESPACES)
     if procurementProject is not None:
-        licitacion.Tipo_de_contrato = tipos_de_contrato.get(check_element('cbc:TypeCode',procurementProject).text.__str__(), "null")
+        licitacion.Tipo_de_contrato = tipos_de_contrato.get(check_element('cbc:TypeCode',procurementProject).text.__str__(), "no es obligatorio si el estado es anuncio previo o anulado")
+        # existe subtipo de contrato para obras y servicios
         licitacion.Objeto_del_Contrato = check_element('cbc:Name',procurementProject).text.__str__()
         budget_section = procurementProject.find('cac:BudgetAmount',NAMESPACES)
         if budget_section is not None:
@@ -209,26 +171,20 @@ def parse_entry(root: ET.Element):
         location_section = procurementProject.find('cac:RealizedLocation',NAMESPACES)
         if location_section is not None:
             licitacion.Lugar_de_ejecucion = check_element('cbc:CountrySubentityCode', location_section).text.__str__() + " - " + check_element('cbc:CountrySubentity',location_section).text.__str__()
-    contratador_section = entry.find('cac-place-ext:LocatedContractingParty',NAMESPACES)
-    if contratador_section is not None:
-        contratador_section = contratador_section.find('cac:Party',NAMESPACES)
-        if contratador_section is not None:
-            contratador_section = contratador_section.find('cac:PartyName',NAMESPACES)
-            if contratador_section is not None:
-                licitacion.Organo_de_Contratacion = check_element('cbc:Name', contratador_section).text.__str__()
     tenderingProcess = entry.find('cac:TenderingProcess',NAMESPACES)
     if tenderingProcess is not None:
         licitacion.Tipo_de_procedimiento = tipos_de_procedimiento.get(check_element('cbc:ProcedureCode', tenderingProcess).text.__str__(), "no asignado")
         licitacion.Sistema_de_contratacion = sistemas_de_contratacion.get(check_element('cbc:ContractingSystemCode', tenderingProcess).text.__str__(),"null")
+        # existe un tipo de urgencia en tramitacion
         fecha_de_presentacion_de_ofertas = tenderingProcess.find('cac:TenderSubmissionDeadlinePeriod',NAMESPACES)
         if fecha_de_presentacion_de_ofertas is not None:
             hora_de_presentacion_de_ofertas = fecha_de_presentacion_de_ofertas.find('cbc:EndTime',NAMESPACES)
             fecha_de_presentacion_de_ofertas = fecha_de_presentacion_de_ofertas.find('cbc:EndDate',NAMESPACES)
             if hora_de_presentacion_de_ofertas is not None and fecha_de_presentacion_de_ofertas is not None:
                 licitacion.Fecha_de_presentacion_de_ofertas = fecha_de_presentacion_de_ofertas.text.__str__() + " " + hora_de_presentacion_de_ofertas.text.__str__()
-        else:
-            descripcion = tenderingProcess.find('cbc:Description', NAMESPACES)
-            licitacion.Fecha_de_presentacion_de_ofertas = descripcion.text if descripcion is not None and descripcion.text is not None else ""
+            else:
+                descripcion = tenderingProcess.find('cbc:Description', NAMESPACES)
+                licitacion.Fecha_de_presentacion_de_ofertas = descripcion.text if descripcion is not None and descripcion.text is not None else ""
     minimum = '9999-01-01'
     notices = entry.findall('cac-place-ext:ValidNoticeInfo',NAMESPACES)
     for notice in notices:
@@ -240,26 +196,54 @@ def parse_entry(root: ET.Element):
                 if notice_date is not None and notice_date.text is not None and notice_date.text < minimum:
                     minimum = notice_date.text
     licitacion.Primera_publicacion = minimum
-    numero_de_lotes = 0
-    lotes = entry.findall('cac:ProcurementProjectLot',NAMESPACES)
-    for _ in lotes:
-        numero_de_lotes+=1
-    procurement_project_lot = entry.findall('cac:ProcurementProjectLot',NAMESPACES)
+    procurement_project_lots = entry.findall('cac:ProcurementProjectLot',NAMESPACES)
     tender_results = entry.findall('cac:TenderResult',NAMESPACES)
     array_lotes = []
-    if numero_de_lotes == 0 and procurementProject is not None:
-        if licitacion.Estado != "En plazo" and licitacion.Estado != "Evaluada" and licitacion.Estado != "Anulada" and len(tender_results)==1:
-            array_lotes.append(parse_lotes_terminados(tender_results[0], procurementProject, licitacion))
-        else:
-            array_lotes.append(parse_lotes_en_plazo(procurementProject, 0, licitacion))
-    for i in range(0,numero_de_lotes):
-        procurementProject = procurement_project_lot[i].find('cac:ProcurementProject',NAMESPACES)
-        if procurementProject is not None:
-            if licitacion.Estado != "En plazo" and licitacion.Estado != "Evaluada" and licitacion.Estado != "Anulada" and i < len(tender_results):
-                array_lotes.append(parse_lotes_terminados(tender_results[i], procurementProject, licitacion))
-            else:
-                array_lotes.append(parse_lotes_en_plazo(procurementProject, i, licitacion))
+    array_lotes.append(licitacion)
+    for procurement_project_lot in procurement_project_lots:
+        array_lotes.append(eval_proc_project(licitacion, procurement_project_lot))
+    for tender_result in tender_results:
+        eval_tender_results(array_lotes, tender_result)
     return array_lotes
+
+def eval_tender_results(array_lotes: list[Licitacion], root: ET.Element):
+    awarded_tender = root.find('cac:AwardedTenderedProject',NAMESPACES)
+    if awarded_tender is not None:
+        id = awarded_tender.find('cbc:ProcurementProjectLotID')
+        print(str(id))
+        numero_lote = int(id.text.__str__()) if id is not None else 0
+        lote = array_lotes[numero_lote]
+        lote.Id_de_lote = id.text.__str__() if id is not None and len(array_lotes) != 1 else "0"
+        # si no encontramos awarded_tender no podemos saber que posicion del array es
+        presupuesto = awarded_tender.find('cac:LegalMonetaryTotal',NAMESPACES)
+        if presupuesto is not None:
+            payable_amount = presupuesto.find('cbc:PayableAmount',NAMESPACES)
+            lote.Importe_adjudicacion_sin_impuestos_licitacion_lote = payable_amount.text.__str__() if payable_amount is not None else "error en la facturación"
+        resultCode = root.find('cbc:ResultCode',NAMESPACES)
+        if resultCode is not None:
+            lote.Resultado_licitacion_lote = resultados_de_procedimiento.get(resultCode.text.__str__(),"null")
+        tender_quantity = root.find('cbc:ReceivedTenderQuantity')
+        lote.Numero_de_ofertas_recibidas_por_licitacion_lote = tender_quantity.text.__str__() if tender_quantity is not None else "error en numero de ofertas recibidas"
+        contract_section = root.find('cac:WinningParty',NAMESPACES)
+        if contract_section is not None:
+            contract_section = contract_section.find('cac:PartyName',NAMESPACES)
+            if contract_section is not None:
+                contracter = contract_section.find('cbc:Name',NAMESPACES)
+                if contracter is not None:
+                    lote.Adjudicatario_licitacion_lote = contracter.text.__str__()
+
+def eval_proc_project(licitacion: Licitacion, root: ET.Element):
+    lote = copy.deepcopy(licitacion)
+    objeto_de_lote = root.find('cbc:Name',NAMESPACES)
+    if objeto_de_lote is not None:
+        lote.Objeto_licitacion_lote = objeto_de_lote.text.__str__()
+    budget_section = root.find('cac:BudgetAmount',NAMESPACES)
+    if budget_section is not None:
+        presupuesto_base = budget_section.find('cbc:TaxExclusiveAmount',NAMESPACES)
+        if presupuesto_base is not None:
+            lote.Presupuesto_base_sin_impuestos_licitacion_lote = presupuesto_base.text.__str__()
+    return lote
+
 
 def send_mail(licitaciones: list[Licitacion]):
     emails = []
@@ -283,7 +267,10 @@ def send_mail(licitaciones: list[Licitacion]):
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
             smtp.login(email_sender, email_pass)
-            smtp.sendmail(email_sender, receiver,em.as_string())
+            try:
+                smtp.sendmail(email_sender, receiver,em.as_string())
+            except Exception as e:
+                smtp.sendmail(email_sender, receiver, str(e))
 
 if __name__ == "__main__":
     licitaciones = update()

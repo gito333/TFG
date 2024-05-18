@@ -8,16 +8,16 @@ resultados_de_procedimiento = {
     "7": "Desierto Definitivamente",
     "8": "Adjudicado",
     "9": "Formalizado",
-    "null": "null",
-    "10": "Licitador mejor valorado:Requerimiento de documentacion"
+    "10": "Licitador mejor valorado:Requerimiento de documentacion",
+    "null": "null"
 }
 sistemas_de_contratacion = {
     "0": "No aplica",
     "1": "Establecimiento del Acuerdo Marco",
     "2": "Establecimiento del Sistema Dinámico de Adquisición",
     "3": "Contrato basado en un Acuerdo Marco",
-    "null": "null",
-    "4": "Contrato basado en un Sistema Dinámico de Adquisición"
+    "4": "Contrato basado en un Sistema Dinámico de Adquisición",
+    "null": "null"
 }
 tipos_de_procedimiento = {
     "1": "Abierto",
@@ -29,8 +29,8 @@ tipos_de_procedimiento = {
     "7": "Derivado de acuerdo marco",
     "8": "Concurso de proyectos",
     "100": "Normas internas",
-    "null": "null",
-    "999": "Otros"
+    "999": "Otros",
+    "null": "null"
 }
 codigos_de_estado = {
     "RES": "Resuelta",
@@ -38,7 +38,7 @@ codigos_de_estado = {
     "PUB": "En plazo", 
     "PRE": "Anuncio Previo",
     "ANUL": "Anulada",
-    "EV": "Evaluada",
+    "EV": "Pendiente de adjudicacion",
     "null": "null"
 }
 tipos_de_contrato = {
@@ -51,8 +51,28 @@ tipos_de_contrato = {
     "7": "Administrativo especial",
     "8": "Privado",
     "50": "Patrimonial",
-    "null": "null",
-    "999": "Otros"
+    "999": "Otros",
+    "null": "null"
+}
+tipos_de_anuncio = {
+    "DOC_PIN": "Anuncio Previo",
+    "DOC_CN": "Anuncio de Licitación",
+    "DOC_CD": "Anuncio de Pliegos",
+    "DOC_DD": "Anuncio de Documento Descriptivo",
+    "DOC_CAN_PROV": "Anuncio de Adjudicación Provisional",
+    "DOC_CAN_DEF": "Anuncio de Adjudicación Definitiva",
+    "DOC_CAN_ADJ": "Anuncio de Adjudicación",
+    "DOC_FORM": "Anuncio de Formalización",
+    "RENUNCIA": "Anuncio de Renuncia",
+    "DESISTIMIENTO": "Anuncio de Desistimiento",
+    "ANUL_PIN": "Anulación de Anuncio Previo",
+    "ANUL_CN": "Anulación de Anuncio de Licitación",
+    "ANUL_CD": "Anulación de Anuncio de Pliegos",
+    "ANUL_DD": "Anulación de Anuncio de Documento Descriptivo",
+    "ANUL_CAN_ADJ": "Anulación de Anuncio de Adjudicación",
+    "ANUL_FORM": "Anulación de Anuncio de Formalización",
+    "ANUL_RENUNCIA": "Anulación de Anuncio de Renuncia",
+    "ANUL_DESISTIMIENTO": "Anulación de Anuncio de Desistimiento"
 }
 
 class Element_mock():

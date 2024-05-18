@@ -102,10 +102,11 @@ def insert_licitacion(licitacion: licitacion.Licitacion):
         for element in CPV_LIST:
             for cpv in licitacion.Cpv:
                 if(cpv.startswith(element,0)):
-                    print(f"inserting {licitacion.Identificador} description {licitacion.Objeto_del_Contrato}")
                     if licitacion.Id_de_lote == "0":
+                        print(f"insertando {licitacion.Identificador} \n{licitacion.Objeto_del_Contrato}")
                         insert_vector(licitacion.Objeto_del_Contrato, licitacion.Identificador, licitacion.Id_de_lote)
                     elif licitacion.Id_de_lote > "0":
+                        print(f"insertando {licitacion.Identificador} lote {licitacion.Id_de_lote} \n{licitacion.Objeto_licitacion_lote}")
                         insert_vector(licitacion.Objeto_licitacion_lote, licitacion.Identificador, licitacion.Id_de_lote)
                     sql = f'''INSERT INTO licitaciones ({', '.join(licitacion.__dict__.keys())})
                             VALUES ({', '.join(['?' for _ in licitacion.__dict__.keys()])})'''
