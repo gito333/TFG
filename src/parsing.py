@@ -2,11 +2,11 @@ import os, requests, zipfile, io, json, copy, ssl, smtplib, itertools
 import xml.etree.ElementTree as ET
 from licitacion import Licitacion
 from datetime import datetime, date
-from utils import get_cpv
 from variables import DATE_FORMAT, DATA_FOLDER ,CONFIG_LOCATION, URLS, NAMESPACES
+from utils import get_cpv
 from enums import *
 from email.message import EmailMessage
-import src.dbconnection as dbconnection
+import dbconnection as dbconnection
 
 def remove_files(path):
     for file in os.listdir(path):
@@ -155,7 +155,7 @@ def parse_entry(root: ET.Element):
                 licitacion.Organo_de_Contratacion = check_element('cbc:Name', contratador_section).text.__str__()
     procurementProject = entry.find('cac:ProcurementProject', NAMESPACES)
     if procurementProject is not None:
-        licitacion.Tipo_de_contrato = tipos_de_contrato.get(check_element('cbc:TypeCode',procurementProject).text.__str__(), "no es obligatorio si el estado es anuncio previo o anulado")
+        licitacion.Tipo_de_contrato = tipos_de_contrato.get(check_element('cbc:TypeCode',procurementProject).text.__str__(), "null")
         # existe subtipo de contrato para obras y servicios
         licitacion.Objeto_del_Contrato = check_element('cbc:Name',procurementProject).text.__str__()
         budget_section = procurementProject.find('cac:BudgetAmount',NAMESPACES)

@@ -75,6 +75,11 @@ tipos_de_anuncio = {
     "ANUL_DESISTIMIENTO": "Anulación de Anuncio de Desistimiento"
 }
 
+search_querys = {
+    "1": "fecha",
+    "2": "estado",
+}
+
 class Element_mock():
     def __init__(self, string: str) -> None:
         self.string = string

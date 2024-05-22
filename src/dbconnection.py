@@ -1,5 +1,5 @@
 import sqlite3, lancedb, pyarrow as pa
-import licitacion
+import licitacion, os
 from variables import CPV_LIST,DB_LOCATION
 from sentence_transformers import SentenceTransformer
 
@@ -10,15 +10,17 @@ def connect_vector_db():
 
 
 def create_vector_table():
-    uri = "{DB_LOCATION}lancedb"
+    uri = f"{DB_LOCATION}lancedb"
     db = lancedb.connect(uri)
     schema = pa.schema([pa.field("vector", pa.list_(pa.float32(), list_size=384)),
                         pa.field("Identificador", pa.string()),
-                        pa.field("Id_de_lote", pa.string())])
+                        pa.field("Id_de_lote", pa.string()),
+                        pa.field("fecha", pa.string()),
+                        pa.field("estado", pa.string())])
+
     db.create_table("licitaciones", schema=schema)
 
 def create_database_table():
-    open(f"{DB_LOCATION}licitaciones.db", "x")
     conn = sqlite3.connect(f'{DB_LOCATION}licitaciones.db')
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS licitaciones (
@@ -32,7 +34,6 @@ def create_database_table():
                 Presupuesto_base_sin_impuestos TEXT,
                 Cpv TEXT,
                 Id_de_lote TEXT,
-                Numero_de_lotes INTEGER,
                 Tipo_de_contrato TEXT,
                 Lugar_de_ejecucion TEXT,
                 Organo_de_Contratacion TEXT,
@@ -101,10 +102,10 @@ def insert_licitacion(licitacion: licitacion.Licitacion):
                 if(cpv.startswith(element,0)):
                     if licitacion.Id_de_lote == "0":
                         print(f"insertando {licitacion.Identificador} \n{licitacion.Objeto_del_Contrato}")
-                        insert_vector(licitacion.Objeto_del_Contrato, licitacion.Identificador, licitacion.Id_de_lote)
+                        insert_vector(licitacion.Objeto_del_Contrato, licitacion.Identificador, licitacion.Id_de_lote, licitacion.Primera_publicacion, licitacion.Estado)
                     elif licitacion.Id_de_lote > "0":
                         print(f"insertando {licitacion.Identificador} lote {licitacion.Id_de_lote} \n{licitacion.Objeto_licitacion_lote}")
-                        insert_vector(licitacion.Objeto_licitacion_lote, licitacion.Identificador, licitacion.Id_de_lote)
+                        insert_vector(licitacion.Objeto_licitacion_lote, licitacion.Identificador, licitacion.Id_de_lote, licitacion.Primera_publicacion, licitacion.Estado)
                     sql = f'''INSERT INTO licitaciones ({', '.join(licitacion.__dict__.keys())})
                             VALUES ({', '.join(['?' for _ in licitacion.__dict__.keys()])})'''
                     values = [y.__str__() for _,y in licitacion.__dict__.items()]
@@ -118,10 +119,10 @@ def insert_licitacion(licitacion: licitacion.Licitacion):
     conn.close()
     return modified
 
-def insert_vector(text: str, Identificador: str, Id_de_lote: str):
+def insert_vector(text: str, Identificador: str, Id_de_lote: str, fecha: str, estado: str):
     embeddings = get_embeddings(text)
     tbl = connect_vector_db()
-    tbl.add([{"vector": embeddings, "Identificador":Identificador,"Id_de_lote":Id_de_lote}])
+    tbl.add([{"vector": embeddings, "Identificador":Identificador, "Id_de_lote":Id_de_lote, "fecha": fecha, "estado": estado}])
 
 def get_embeddings(text:str):
     model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2', token='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') 

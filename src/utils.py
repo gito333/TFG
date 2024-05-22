@@ -1,9 +1,8 @@
+from lancedb import DBConnection
 from variables import CPV_LIST
-from dbconnection import create_database_table, create_vector_table
+from dbconnection import create_database_table, create_vector_table, drop_table
 from datetime import datetime
 from variables import *
-from parsing import *
-from licitacion import Licitacion
 import json, shutil, os
 
 def get_cpv():
@@ -22,9 +21,10 @@ def remove_db():
         json_file.seek(0)
         json.dump(data, json_file)
         json_file.truncate()
-    dbconnection.drop_table()
-    if os.path.exists('lancedb'):
-        shutil.rmtree('lancedb')
+    os.remove(f"{DB_LOCATION}licitaciones.db")
+    if os.path.exists(f"{DB_LOCATION}lancedb"):
+        print('holaa')
+        shutil.rmtree(f"{DB_LOCATION}lancedb")
 
 def ask_date():
     print("introduce el nuevo año desde el que te gustaría empezar entre 2022 y el actual")
@@ -58,7 +58,7 @@ def create_config_file():
         "emails": "rodrigorincon324@gmail.com",
         "threads": 10
     }
-    with open(f'{CONFIG_LOCATION}config.json', 'w') as f:
+    with open(f'{CONFIG_LOCATION}config.json', 'w+') as f:
         json.dump(data, f)
     ask_date()
     print("Creado el archivo de configuración")
@@ -89,40 +89,8 @@ def remove_cpv():
             json.dump(data, json_file)
             json_file.truncate()
 
-def get_cpv():
-    with open(f"{CONFIG_LOCATION}config.json", "r") as json_file:
-        try:
-            data = json.load(json_file)
-            for cpv in data['CPV']:
-                CPV_LIST.append(cpv)
-        except Exception:
-            create_config_file()
 
 def show_cpv():
     for cpv in CPV_LIST:
         print(cpv)
-
-def update_function():
-    with open(f"{CONFIG_LOCATION}config.json", "r" )as json_file:
-        data = json.load(json_file)
-        if data['last_date_updated'] == "":
-            restartdb()
-    mailing = update()
-    del(mailing)
-
-def search_function():
-    licitacion = Licitacion()
-    try:
-        print("Haz una busqueda semantica sobre lo que quieres buscar")
-        user_input = input()
-        embeddings = dbconnection.get_embeddings(user_input)
-        tlb =  dbconnection.connect_vector_db()
-        res = tlb.search(embeddings).limit(4).select(["Identificador", "Id_de_lote"]).to_list()
-        for i in res:
-            print(f"identificador {i['Identificador']} id de lote {i['Id_de_lote']}")
-            x = dbconnection.get_from_db(i["Identificador"], i["Id_de_lote"])
-            for n,key in enumerate(licitacion.__dict__.keys()):
-                print(f"\033[94m{key}: \033[92m{x[n]}\033[0m")
-    except Exception as e:
-        print(f"no existe la base de datos {e}")
 
